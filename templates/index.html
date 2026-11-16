@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1014">
+  <meta name="theme-color" content="#f4f8f6" media="(prefers-color-scheme: light)">
+  <title>Myco | Colony Monitor</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font: 16px/1.5 system-ui, sans-serif;
+      background: #0b1014;
+      color: #e8f2f1;
+      --background: #0b1014;
+      --background-glow: #152b2b;
+      --sidebar: rgba(13, 20, 24, .8);
+      --surface: #131c21;
+      --panel-surface: rgba(19, 28, 33, .82);
+      --surface-raised: #172229;
+      --border: #26343b;
+      --track: #2a3a41;
+      --muted: #8ca0aa;
+      --text: #e8f2f1;
+      --green: #66e3b4;
+      --cyan: #79cde0;
+      --amber: #f1c27a;
+      --coral: #ff7979;
+      --nav-label: #637e89;
+      --tab-text: #93a8b1;
+      --tab-active-background: #1b302c;
+      --tab-active-text: #8cf0c4;
+      --crumb-text: #d5e6e5;
+      --topology-node-fill: #193c34;
+      --chart-grid: #26343b;
+      --background-art: url("/static/backgrounds/bkv2.svg");
+      --background-art-opacity: .55;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-width: 0;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 82% 4%, var(--background-glow) 0, transparent 35rem),
+        var(--background);
+    }
+    body::before {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      content: "";
+      background: var(--background-art) center / cover no-repeat;
+      opacity: var(--background-art-opacity);
+    }
+    button, input, select { font: inherit; }
+    button, input, select { color: inherit; }
+    .app { position: relative; z-index: 1; display: grid; grid-template-columns: 230px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      height: 100vh;
+      padding: 1.75rem 1.1rem;
+      border-right: 1px solid var(--border);
+      background: var(--sidebar);
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-top { display: flex; flex-direction: column; gap: 2rem; }
+    .sidebar-nav { display: block; }
+    .brand { display: flex; align-items: center; gap: .7rem; padding: 0 .65rem; }
+    .brand img { display: block; width: 36px; height: 36px; object-fit: contain; }
+    .brand-name { margin: 0; font-size: 1.15rem; font-weight: 750; letter-spacing: .08em; }
+    .brand-caption { margin: 0; color: var(--muted); font-size: .62rem; letter-spacing: .08em; }
+    .navlabel { margin: 0 0 .55rem; padding: 0 .7rem; color: var(--nav-label); font-size: .62rem; font-weight: 700; letter-spacing: .16em; }
+    .tabs {
+      display: grid;
+      gap: .3rem;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+    .tab {
+      display: flex;
+      flex: auto;
+      align-items: center;
+      gap: .7rem;
+      min-width: 0;
+      padding: .7rem;
+      border: 0;
+      border-radius: .65rem;
+      background: transparent;
+      color: var(--tab-text);
+      cursor: pointer;
+      text-align: left;
+      font-size: .82rem;
+      font-weight: 600;
+    }
+    .tab::before { width: 1.2rem; color: #8ca0aa; text-align: center; }
+    #tab-overview::before { content: "◈"; }
+    #tab-nodes::before { content: "▣"; }
+    #tab-history::before { content: "≋"; }
+    .tab[aria-selected="true"] { background: var(--tab-active-background); color: var(--tab-active-text); }
+    .tab[aria-selected="true"]::before { color: var(--green); }
+    .sidefoot {
+      margin-top: auto;
+      padding: 1rem .7rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: .75rem;
+    }
+    .connection {
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      max-width: 100%;
+      min-height: 1.6rem;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: .72rem;
+      overflow-wrap: anywhere;
+    }
+    .connection::before {
+      flex: 0 0 .48rem;
+      width: .48rem;
+      height: .48rem;
+      border-radius: 50%;
+      background: var(--amber);
+      content: "";
+    }
+    .connection[data-state="connected"] { color: #9ef0c9; }
+    .connection[data-state="connected"]::before {
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(102, 227, 180, .55);
+    }
+    .connection[data-state="error"] { color: var(--coral); }
+    main { width: min(100%, 1680px); min-width: 0; margin: auto; padding: 2rem clamp(1.25rem, 4vw, 4rem) 4rem; }
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: .85rem;
+      margin-bottom: 2rem;
+    }
+    .crumb { color: var(--muted); font-size: .75rem; }
+    .crumb b { color: var(--crumb-text); }
+    .topbar .connection {
+      min-height: 0;
+      padding: .5rem .8rem;
+      border: 1px solid #285949;
+      background: #143229;
+      color: #9ef0c9;
+      font-size: .72rem;
+      white-space: nowrap;
+    }
+    .topbar .connection[data-state="connecting"] {
+      border-color: #514430;
+      background: #28231c;
+      color: var(--amber);
+    }
+    .topbar .connection[data-state="error"] {
+      border-color: #62373b;
+      background: #302024;
+      color: var(--coral);
+    }
+    .view[hidden] { display: none; }
+    .eyebrow {
+      margin: 0 0 .35rem;
+      color: var(--cyan);
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.65rem); line-height: 1.12; letter-spacing: -.04em; }
+    h2 { margin: 0; font-size: 1rem; font-weight: 680; }
+    .description { max-width: 620px; margin: .55rem 0 1.3rem; color: var(--muted); font-size: .92rem; }
+    .section-heading {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: .65rem;
+      margin: 1.5rem 0 .7rem;
+    }
+    .section-heading p { margin: 0; color: var(--muted); font-size: .75rem; }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .7rem;
+    }
+    .summary-card, .panel, .node-card {
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: .9rem;
+      background: var(--panel-surface);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, .12);
+    }
+    .summary-card { padding: .9rem 1rem; }
+    .summary-label { margin: 0; color: var(--muted); font-size: .74rem; }
+    .summary-value { margin: .15rem 0 0; font-size: 1.6rem; font-weight: 720; line-height: 1.2; }
+    .summary-value.online { color: var(--green); }
+    .summary-value.stale { color: var(--amber); }
+    .summary-value.offline { color: var(--coral); }
+    .panel { padding: 1rem; }
+    .health-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 2fr); gap: .75rem; margin-top: .75rem; }
+    .health-state { display: flex; align-items: center; gap: .8rem; margin: .8rem 0 .55rem; }
+    .health-orb {
+      flex: 0 0 2.25rem;
+      width: 2.25rem;
+      height: 2.25rem;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      color: var(--muted);
+      box-shadow: 0 0 18px currentColor;
+    }
+    .health-orb.online { color: var(--green); }
+    .health-orb.attention { color: var(--amber); }
+    .health-orb.offline { color: var(--coral); }
+    .health-orb.empty { color: var(--muted); }
+    .health-title { margin: 0; font-weight: 700; }
+    .health-copy { margin: .15rem 0 0; color: var(--muted); font-size: .78rem; }
+    .health-track, .meter-track { overflow: hidden; border-radius: 999px; background: var(--track); }
+    .health-track { height: .42rem; }
+    .health-fill, .meter-fill { height: 100%; border-radius: inherit; background: var(--green); transition: width .25s ease; }
+    .health-fill { background: var(--green); }
+    .health-fill.attention { background: var(--amber); }
+    .health-fill.offline { background: var(--coral); }
+    .topology-svg { display: block; width: 100%; height: auto; margin-top: .4rem; overflow: visible; }
+    .topology-edge { stroke: rgba(102, 227, 180, .65); stroke-width: 2; }
+    .topology-edge.stale { stroke: var(--amber); stroke-dasharray: 6 6; }
+    .topology-edge.unknown { stroke: rgba(140, 160, 170, .4); stroke-dasharray: 3 6; }
+    .topology-node { fill: var(--topology-node-fill); stroke: var(--green); stroke-width: 2; }
+    .topology-node.local { fill: rgba(102, 227, 180, .16); stroke: var(--green); }
+    .topology-node.unknown { stroke: var(--muted); }
+    .topology-dot { fill: var(--green); }
+    .topology-dot.local { fill: var(--green); }
+    .topology-label { fill: var(--text); font: 12px system-ui, sans-serif; text-anchor: middle; }
+    .topology-caption { fill: var(--muted); font: 10px system-ui, sans-serif; text-anchor: middle; }
+    .topology-note, .muted { color: var(--muted); font-size: .75rem; }
+    .topology-note { margin: .35rem 0 0; }
+    .node-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; }
+    .node-card { padding: .95rem; overflow: hidden; }
+    .node-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; min-width: 0; }
+    .node-title-wrap { min-width: 0; }
+    .node-title { margin: 0; overflow-wrap: anywhere; font-size: .9rem; font-weight: 680; }
+    .node-kind { margin: .1rem 0 0; color: var(--muted); font-size: .72rem; }
+    .node-status { display: inline-flex; align-items: center; gap: .35rem; flex: 0 0 auto; color: var(--green); font-size: .7rem; font-weight: 650; }
+    .node-status::before { width: .42rem; height: .42rem; border-radius: 50%; background: currentColor; content: ""; }
+    .node-status.stale { color: var(--amber); }
+    .node-status.offline { color: var(--coral); }
+    .node-status.unknown { color: var(--muted); }
+    .meter { margin-top: .7rem; }
+    .meter-label { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; margin-bottom: .28rem; color: var(--muted); font-size: .7rem; }
+    .meter-value { color: var(--text); font-weight: 650; }
+    .meter-track { height: .35rem; }
+    .meter-fill { background: var(--green); }
+    .meter-fill.high { background: var(--coral); }
+    .meter-fill.mid { background: var(--amber); }
+    .missing { color: var(--muted); cursor: help; text-decoration: underline dotted rgba(140, 160, 170, .55); text-underline-offset: .2em; }
+    .hardware-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; padding-top: .75rem; margin-top: .75rem; border-top: 1px solid var(--border); }
+    .hardware-item { min-width: 0; }
+    .hardware-label { margin: 0; color: var(--muted); font-size: .66rem; }
+    .hardware-value { margin: .1rem 0 0; overflow-wrap: anywhere; font-size: .77rem; font-weight: 550; }
+    .filters, .history-controls { display: flex; flex-wrap: wrap; gap: .55rem; margin: 1rem 0; }
+    .field {
+      min-width: 0;
+      padding: .55rem .7rem;
+      border: 1px solid var(--border);
+      border-radius: .6rem;
+      outline: none;
+      background: var(--surface);
+      font-size: .83rem;
+    }
+    .field:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(121, 205, 224, .12); }
+    .search { flex: 1 1 14rem; }
+    .empty {
+      grid-column: 1 / -1;
+      padding: 2.3rem 1rem;
+      border: 1px dashed var(--border);
+      border-radius: .9rem;
+      color: var(--muted);
+      text-align: center;
+      font-size: .85rem;
+    }
+    .chart-panel { margin-top: .75rem; }
+    .chart-wrap { width: 100%; min-width: 0; }
+    .chart { display: block; width: 100%; height: auto; }
+    .chart-grid { stroke: var(--chart-grid); stroke-width: 1; }
+    .chart-axis { fill: var(--muted); font: 11px system-ui, sans-serif; }
+    .chart-line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-line.cpu { stroke: var(--cyan); }
+    .chart-line.memory { stroke: var(--green); }
+    .chart-line.disk { stroke: var(--coral); }
+    .legend { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; margin-top: .7rem; }
+    .legend-item { display: inline-flex; align-items: center; gap: .4rem; color: var(--muted); font-size: .75rem; }
+    .legend-dot { width: .55rem; height: .55rem; border-radius: 50%; background: var(--cyan); }
+    .legend-dot.memory { background: var(--green); }
+    .legend-dot.disk { background: var(--coral); }
+    #history-status { min-height: 1.2em; margin: .35rem 0 0; color: var(--muted); font-size: .75rem; }
+    .wake-status { margin-top: 1rem; color: var(--muted); font-size: .72rem; text-align: center; }
+    @media (prefers-color-scheme: light) {
+      :root {
+        color-scheme: light;
+        background: #f4f8f6;
+        color: #16241f;
+        --background: #f4f8f6;
+        --background-glow: #e3f2ed;
+        --sidebar: rgba(255, 255, 255, .86);
+        --surface: #fff;
+        --panel-surface: rgba(255, 255, 255, .9);
+        --surface-raised: #f1f5f3;
+        --border: #d5e0dc;
+        --track: #dce7e2;
+        --muted: #63766e;
+        --text: #16241f;
+        --green: #16835d;
+        --cyan: #147a91;
+        --amber: #986200;
+        --coral: #c54141;
+        --nav-label: #66776f;
+        --tab-text: #52645c;
+        --tab-active-background: #d9f3e8;
+        --tab-active-text: #15583f;
+        --crumb-text: #344740;
+        --topology-node-fill: #e4f4ed;
+        --chart-grid: #d5e0dc;
+        --background-art-opacity: .12;
+      }
+      .connection[data-state="connected"] { color: #176444; }
+      .topbar .connection {
+        border-color: #b7dfca;
+        background: #e4f5eb;
+        color: #176444;
+      }
+      .topbar .connection[data-state="connecting"] {
+        border-color: #e4d4b5;
+        background: #fbf4e8;
+      }
+      .topbar .connection[data-state="error"] {
+        border-color: #e8c1c1;
+        background: #faeded;
+      }
+    }
+    @media (max-width: 760px) {
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .health-layout { grid-template-columns: minmax(0, 1fr); }
+      .node-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sidebar { position: static; height: auto; padding: .9rem 1.1rem; gap: .8rem; }
+      .app { grid-template-columns: minmax(0, 1fr); }
+      .sidebar-top { display: flex; align-items: center; justify-content: space-between; gap: .7rem; }
+      .brand { padding: 0; }
+      .brand img { width: 34px; height: 34px; }
+      .sidebar-nav { display: flex; align-items: center; gap: .5rem; }
+      .navlabel { display: none; }
+      .tabs { display: flex; flex: 1; justify-content: flex-end; gap: .2rem; }
+      .tab { justify-content: center; padding: .55rem .65rem; font-size: .78rem; }
+      .tab::before { display: none; }
+      .sidefoot { display: none; }
+      main { padding: 1.4rem 1.1rem 3rem; }
+    }
+    @media (max-width: 480px) {
+      .sidebar { position: sticky; top: 0; z-index: 3; }
+      .sidebar-top { align-items: flex-start; flex-direction: column; }
+      .sidebar-nav { width: 100%; }
+      .tabs { justify-content: stretch; }
+      .tab { flex: 1; padding: .55rem .35rem; font-size: .75rem; }
+      main { padding: 1.25rem .9rem 2.5rem; }
+      .topbar { margin-bottom: 1.3rem; }
+      .topbar .connection { font-size: .65rem; }
+      .node-grid { grid-template-columns: minmax(0, 1fr); }
+      .panel { padding: .85rem; }
+      .summary-card { padding: .75rem; }
+      .summary-value { font-size: 1.4rem; }
+      .field { flex: 1 1 100%; }
+      .chart-axis { font-size: 9px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="brand">
+          <picture>
+            <source media="(prefers-color-scheme: light)" srcset="/static/images/logo_black.png">
+            <img src="/static/images/logo_clear.png" alt="Myco logo">
+          </picture>
+          <div>
+            <p class="brand-name">MYCO</p>
+            <p class="brand-caption">NETWORK INTELLIGENCE</p>
+          </div>
+        </div>
+        <div class="sidebar-nav">
+          <p class="navlabel">WORKSPACE</p>
+          <nav class="tabs" role="tablist" aria-label="Dashboard views">
+            <button class="tab" id="tab-overview" type="button" role="tab" aria-selected="true" aria-controls="view-overview" data-view="overview">Overview</button>
+            <button class="tab" id="tab-nodes" type="button" role="tab" aria-selected="false" aria-controls="view-nodes" data-view="nodes">Nodes</button>
+            <button class="tab" id="tab-history" type="button" role="tab" aria-selected="false" aria-controls="view-history" data-view="history">History</button>
+          </nav>
+        </div>
+      </div>
+      <div class="sidefoot">
+        <p>Colony telemetry updates every few seconds.</p>
+      </div>
+    </aside>
+
+  <main>
+    <header class="topbar">
+      <div class="crumb" id="breadcrumb">Workspace / <b>Home colony</b> / Overview</div>
+      <span id="status" class="connection" data-state="connecting" role="status">Connecting to the colony</span>
+    </header>
+    <section class="view" id="view-overview" role="tabpanel" aria-labelledby="tab-overview">
+      <p class="eyebrow">Overview / Main colony</p>
+      <h1>Your network, at a glance.</h1>
+      <p class="description">Monitor your MycoNodes, peer links, and colony health.</p>
+
+      <div class="summary-grid" aria-label="Colony health summary">
+        <article class="summary-card"><p class="summary-label">Total nodes</p><p class="summary-value" id="total-count">—</p></article>
+        <article class="summary-card"><p class="summary-label">Online</p><p class="summary-value online" id="online-count">—</p></article>
+        <article class="summary-card"><p class="summary-label">Stale</p><p class="summary-value stale" id="stale-count">—</p></article>
+        <article class="summary-card"><p class="summary-label">Offline</p><p class="summary-value offline" id="offline-count">—</p></article>
+      </div>
+
+      <div class="health-layout">
+        <section class="panel" aria-labelledby="health-heading">
+          <h2 id="health-heading">Colony health</h2>
+          <div class="health-state">
+            <span class="health-orb empty" id="health-orb" aria-hidden="true"></span>
+            <div>
+              <p class="health-title" id="health-title">Waiting for spores</p>
+              <p class="health-copy" id="health-copy">No node telemetry has arrived yet.</p>
+            </div>
+          </div>
+          <div class="health-track" role="progressbar" aria-label="Online node percentage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="health-fill" id="health-fill" style="width: 0%"></div>
+          </div>
+        </section>
+        <section class="panel" aria-labelledby="topology-heading">
+          <div class="section-heading" style="margin:0">
+            <h2 id="topology-heading">Colony topology</h2>
+            <p id="topology-count">Peer discovery</p>
+          </div>
+          <svg class="topology-svg" id="topology" viewBox="0 0 640 250" role="img" aria-label="Observed peer connections"></svg>
+          <p class="topology-note" id="topology-note">Links appear after successful gossip exchanges; discovered peers are not assumed to be connected.</p>
+        </section>
+      </div>
+
+      <div class="section-heading">
+        <h2>MycoNodes</h2>
+        <p id="overview-node-count">Waiting for telemetry</p>
+      </div>
+      <div class="node-grid" id="overview-nodes"></div>
+    </section>
+
+    <section class="view" id="view-nodes" role="tabpanel" aria-labelledby="tab-nodes" hidden>
+      <p class="eyebrow">Colony / Organisms</p>
+      <h1>MycoNodes</h1>
+      <p class="description">Inspect each organism's telemetry, hardware profile, and last report.</p>
+      <div class="filters">
+        <input class="field search" id="node-search" type="search" placeholder="Find a node" aria-label="Find a node">
+        <select class="field" id="status-filter" aria-label="Filter by node status">
+          <option value="all">All statuses</option>
+          <option value="online">Online</option>
+          <option value="stale">Stale</option>
+          <option value="offline">Offline</option>
+        </select>
+      </div>
+      <div class="node-grid" id="node-list"></div>
+    </section>
+
+    <section class="view" id="view-history" role="tabpanel" aria-labelledby="tab-history" hidden>
+      <p class="eyebrow">Colony / Signals over time</p>
+      <h1>Telemetry history</h1>
+      <p class="description">Explore CPU, memory, and disk utilization recorded in this node's SQLite history.</p>
+      <div class="history-controls">
+        <select class="field" id="history-node" aria-label="Choose a MycoNode"></select>
+        <select class="field" id="history-range" aria-label="History time range">
+          <option value="1">Last hour</option>
+          <option value="24" selected>Last 24 hours</option>
+          <option value="168">Last 7 days</option>
+        </select>
+      </div>
+      <section class="panel chart-panel" aria-label="Telemetry history chart">
+        <div class="chart-wrap">
+          <svg class="chart" id="history-chart" viewBox="0 0 800 280" role="img" aria-label="CPU, memory, and disk utilization over time"></svg>
+        </div>
+        <div class="legend" aria-label="Chart legend">
+          <span class="legend-item"><span class="legend-dot"></span>CPU</span>
+          <span class="legend-item"><span class="legend-dot memory"></span>Memory</span>
+          <span class="legend-item"><span class="legend-dot disk"></span>Disk</span>
+        </div>
+        <p id="history-status" role="status">Select a node to load its history.</p>
+      </section>
+    </section>
+    <p class="wake-status" id="wake-status"></p>
+  </main>
+  <script>
+    const status = document.getElementById("status");
+    const wakeStatus = document.getElementById("wake-status");
+    const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
+    const capacityFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
+    const missingMetric = "The agent hasn't reported this metric.";
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    let nodeData = {};
+    let topologyData = { self: "", peers: [], links: [] };
+    let wakeLock = null;
+    let historyRequest = 0;
+
+    function element(tag, className, text) {
+      const item = document.createElement(tag);
+      if (className) item.className = className;
+      if (text !== undefined) item.textContent = text;
+      return item;
+    }
+
+    function svgElement(tag, attributes) {
+      const item = document.createElementNS(SVG_NS, tag);
+      for (const [name, value] of Object.entries(attributes)) item.setAttribute(name, value);
+      return item;
+    }
+
+    function missingValue() {
+      const missing = element("span", "missing", "—");
+      missing.title = missingMetric;
+      missing.setAttribute("aria-label", `Not reported. ${missingMetric}`);
+      return missing;
+    }
+
+    function formatPercent(value) {
+      return typeof value === "number" && Number.isFinite(value)
+        ? `${numberFormat.format(value)}%`
+        : "—";
+    }
+
+    function formatBytes(used, total) {
+      if (typeof used !== "number" || typeof total !== "number") return "—";
+      const units = [[1024 ** 3, "GB"], [1024 ** 2, "MB"], [1024, "KB"]];
+      const [divisor, unit] = units.find(([size]) => total >= size) || [1, "B"];
+      return `${capacityFormat.format(used / divisor)} / ${capacityFormat.format(total / divisor)} ${unit}`;
+    }
+
+    function formatTemperature(value) {
+      return typeof value === "number" && Number.isFinite(value)
+        ? `${numberFormat.format(value)} °C`
+        : "—";
+    }
+
+    function statusText(value) {
+      return value === "online" ? "Online" : value === "stale" ? "Stale" : "Offline";
+    }
+
+    function addHardwareItem(grid, label, value, isMissing) {
+      const item = element("div", "hardware-item");
+      item.appendChild(element("p", "hardware-label", label));
+      const text = element("p", "hardware-value");
+      if (isMissing) text.appendChild(missingValue());
+      else text.textContent = value;
+      item.appendChild(text);
+      grid.appendChild(item);
+    }
+
+    function addMeter(card, label, value) {
+      const meter = element("div", "meter");
+      const meterLabel = element("div", "meter-label");
+      meterLabel.appendChild(element("span", "", label));
+      if (typeof value !== "number" || !Number.isFinite(value)) {
+        meterLabel.appendChild(missingValue());
+        meter.appendChild(meterLabel);
+        card.appendChild(meter);
+        return;
+      }
+      meterLabel.appendChild(element("span", "meter-value", formatPercent(value)));
+      const track = element("div", "meter-track");
+      track.setAttribute("role", "progressbar");
+      track.setAttribute("aria-label", `${label} utilization`);
+      track.setAttribute("aria-valuemin", "0");
+      track.setAttribute("aria-valuemax", "100");
+      track.setAttribute("aria-valuenow", String(value));
+      const fill = element("div", "meter-fill");
+      fill.style.width = `${Math.max(0, Math.min(100, value))}%`;
+      if (value >= 90) fill.classList.add("high");
+      else if (value >= 75) fill.classList.add("mid");
+      track.appendChild(fill);
+      meter.append(meterLabel, track);
+      card.appendChild(meter);
+    }
+
+    function makeNodeCard(hostname, report, detailed) {
+      const card = element("article", "node-card");
+      const metrics = report.metrics || {};
+      const top = element("div", "node-top");
+      const titleWrap = element("div", "node-title-wrap");
+      titleWrap.appendChild(element("h3", "node-title", hostname));
+      titleWrap.appendChild(element("p", "node-kind", report.device_type || "Unknown type"));
+      const badge = element("span", `node-status ${report.status || "offline"}`, statusText(report.status));
+      badge.title = `Last report: ${new Date(report.last_updated * 1000).toLocaleString()}`;
+      top.append(titleWrap, badge);
+      card.appendChild(top);
+      addMeter(card, "CPU", metrics.cpu_percent);
+      addMeter(card, "Memory", metrics.mem_percent);
+      addMeter(card, "Disk", metrics.disk_percent);
+
+      if (detailed) {
+        const hardware = element("div", "hardware-grid");
+        addHardwareItem(hardware, "Logical cores",
+          metrics.cpu_count == null ? "" : numberFormat.format(metrics.cpu_count),
+          metrics.cpu_count == null);
+        addHardwareItem(hardware, "Memory used / total",
+          formatBytes(metrics.mem_used_bytes, metrics.mem_total_bytes),
+          metrics.mem_used_bytes == null || metrics.mem_total_bytes == null);
+        addHardwareItem(hardware, "Storage used / total",
+          formatBytes(metrics.disk_used_bytes, metrics.disk_total_bytes),
+          metrics.disk_used_bytes == null || metrics.disk_total_bytes == null);
+        addHardwareItem(hardware, "CPU temperature", formatTemperature(metrics.cpu_temperature_c),
+          metrics.cpu_temperature_c == null);
+        addHardwareItem(hardware, "GPU temperature", formatTemperature(metrics.gpu_temperature_c),
+          metrics.gpu_temperature_c == null);
+        addHardwareItem(hardware, "Operating system", metrics.os_version || "",
+          !metrics.os_version);
+        addHardwareItem(hardware, "Custom signal", metrics.custom_metric || "",
+          !metrics.custom_metric);
+        addHardwareItem(hardware, "Last report",
+          new Date(report.last_updated * 1000).toLocaleString(), false);
+        card.appendChild(hardware);
+      } else {
+        const updated = element("p", "node-kind", `Last seen ${new Date(report.last_updated * 1000).toLocaleTimeString()}`);
+        updated.style.marginTop = ".65rem";
+        card.appendChild(updated);
+      }
+      return card;
+    }
+
+    function renderSummary(entries) {
+      const counts = { online: 0, stale: 0, offline: 0 };
+      for (const [, report] of entries) counts[report.status] = (counts[report.status] || 0) + 1;
+      document.getElementById("total-count").textContent = String(entries.length).padStart(2, "0");
+      document.getElementById("online-count").textContent = String(counts.online).padStart(2, "0");
+      document.getElementById("stale-count").textContent = String(counts.stale).padStart(2, "0");
+      document.getElementById("offline-count").textContent = String(counts.offline).padStart(2, "0");
+      const healthTitle = document.getElementById("health-title");
+      const healthCopy = document.getElementById("health-copy");
+      const orb = document.getElementById("health-orb");
+      const fill = document.getElementById("health-fill");
+      const progress = fill.parentElement;
+      const onlinePercent = entries.length ? counts.online / entries.length * 100 : 0;
+      fill.style.width = `${onlinePercent}%`;
+      progress.setAttribute("aria-valuenow", String(Math.round(onlinePercent)));
+      orb.className = "health-orb";
+      fill.className = "health-fill";
+      if (!entries.length) {
+        healthTitle.textContent = "Waiting for spores";
+        healthCopy.textContent = "No node telemetry has arrived yet.";
+        orb.classList.add("empty");
+      } else if (counts.offline) {
+        healthTitle.textContent = "Colony needs attention";
+        healthCopy.textContent = `${counts.offline} node${counts.offline === 1 ? "" : "s"} offline; ${counts.online} online.`;
+        orb.classList.add("offline");
+        fill.classList.add("offline");
+      } else if (counts.stale) {
+        healthTitle.textContent = "Some signals are fading";
+        healthCopy.textContent = `${counts.stale} stale; ${counts.online} online.`;
+        orb.classList.add("attention");
+        fill.classList.add("attention");
+      } else {
+        healthTitle.textContent = "Colony healthy";
+        healthCopy.textContent = "Every MycoNode has reported recently.";
+        orb.classList.add("online");
+      }
+    }
+
+    function peerLabel(url) {
+      try {
+        const parsed = new URL(url);
+        return parsed.port ? `${parsed.hostname}:${parsed.port}` : parsed.hostname;
+      } catch {
+        return url;
+      }
+    }
+
+    function renderTopology(topology) {
+      const svg = document.getElementById("topology");
+      svg.replaceChildren();
+      const allPeers = [...new Set(topology.peers || [])].filter(url => url !== topology.self);
+      const visiblePeers = allPeers.slice(0, 12);
+      const seen = new Map((topology.links || []).map(link => [link.target, link.last_seen]));
+      const center = { x: 320, y: 120 };
+      const positions = new Map([[topology.self, center]]);
+      visiblePeers.forEach((url, index) => {
+        const angle = -Math.PI / 2 + 2 * Math.PI * index / Math.max(visiblePeers.length, 1);
+        positions.set(url, {
+          x: center.x + 220 * Math.cos(angle),
+          y: center.y + 82 * Math.sin(angle),
+        });
+      });
+
+      for (const url of visiblePeers) {
+        const lastSeen = seen.get(url);
+        if (lastSeen == null) continue;
+        const point = positions.get(url);
+        const age = Math.max(0, Date.now() / 1000 - lastSeen);
+        const line = svgElement("line", {
+          x1: center.x, y1: center.y, x2: point.x, y2: point.y,
+          class: `topology-edge${age > 15 ? " stale" : ""}`,
+        });
+        const title = svgElement("title", {});
+        title.textContent = `Observed gossip exchange with ${peerLabel(url)} ${Math.round(age)} seconds ago`;
+        line.appendChild(title);
+        svg.appendChild(line);
+      }
+      for (const url of visiblePeers) {
+        const point = positions.get(url);
+        const known = seen.has(url);
+        const group = svgElement("g", {});
+        const circle = svgElement("circle", {
+          cx: point.x, cy: point.y, r: 18,
+          class: `topology-node${known ? "" : " unknown"}`,
+        });
+        const dot = svgElement("circle", {
+          cx: point.x, cy: point.y, r: 5,
+          class: `topology-dot${known ? "" : " unknown"}`,
+        });
+        group.append(circle, dot);
+        const label = svgElement("text", { x: point.x, y: point.y + 33, class: "topology-label" });
+        label.textContent = peerLabel(url).slice(0, 20);
+        group.appendChild(label);
+        const caption = svgElement("text", { x: point.x, y: point.y + 46, class: "topology-caption" });
+        caption.textContent = known ? "Observed peer" : "Discovered";
+        group.appendChild(caption);
+        svg.appendChild(group);
+      }
+      const local = svgElement("g", {});
+      local.append(
+        svgElement("circle", { cx: center.x, cy: center.y, r: 22, class: "topology-node local" }),
+        svgElement("circle", { cx: center.x, cy: center.y, r: 6, class: "topology-dot local" }),
+      );
+      const localLabel = svgElement("text", {
+        x: center.x, y: center.y + 39, class: "topology-label",
+      });
+      localLabel.textContent = "This MycoNode";
+      local.appendChild(localLabel);
+      svg.appendChild(local);
+      if (!topology.self) {
+        const empty = svgElement("text", { x: center.x, y: center.y + 75, class: "topology-caption" });
+        empty.textContent = "No peer identity configured";
+        svg.appendChild(empty);
+      }
+      if (allPeers.length > visiblePeers.length) {
+        const more = svgElement("text", { x: 320, y: 238, class: "topology-caption" });
+        more.textContent = `+${allPeers.length - visiblePeers.length} additional discovered peers`;
+        svg.appendChild(more);
+      }
+      document.getElementById("topology-count").textContent =
+        `${allPeers.length} discovered · ${seen.size} observed`;
+      document.getElementById("topology-note").textContent = seen.size
+        ? "Solid links show successful gossip exchanges; dotted nodes are discovered peers not yet contacted."
+        : "No successful gossip exchanges observed yet. Discovered peers are shown without inferred links.";
+    }
+
+    function renderNodes() {
+      const entries = Object.entries(nodeData).sort(([a], [b]) => a.localeCompare(b));
+      const overview = document.getElementById("overview-nodes");
+      overview.replaceChildren();
+      if (!entries.length) {
+        overview.appendChild(element("p", "empty", "Listening for spores. MycoNodes appear as telemetry arrives."));
+      } else {
+        entries.slice(0, 6).forEach(([hostname, report]) =>
+          overview.appendChild(makeNodeCard(hostname, report, false)));
+      }
+      document.getElementById("overview-node-count").textContent =
+        `${entries.length} MycoNode${entries.length === 1 ? "" : "s"} reporting`;
+
+      const query = document.getElementById("node-search").value.trim().toLocaleLowerCase();
+      const filter = document.getElementById("status-filter").value;
+      const filtered = entries.filter(([hostname, report]) =>
+        (!query || `${hostname} ${report.device_type}`.toLocaleLowerCase().includes(query)) &&
+        (filter === "all" || report.status === filter));
+      const list = document.getElementById("node-list");
+      list.replaceChildren();
+      if (!filtered.length) {
+        list.appendChild(element("p", "empty",
+          entries.length ? "No MycoNodes match these filters." : "No node telemetry is available yet."));
+      } else {
+        filtered.forEach(([hostname, report]) =>
+          list.appendChild(makeNodeCard(hostname, report, true)));
+      }
+      updateHistoryNodeOptions(entries);
+    }
+
+    function updateHistoryNodeOptions(entries) {
+      const select = document.getElementById("history-node");
+      const selected = select.value;
+      const previousCount = select.options.length;
+      select.replaceChildren();
+      entries.forEach(([hostname]) => {
+        const option = element("option", "", hostname);
+        option.value = hostname;
+        select.appendChild(option);
+      });
+      if (entries.some(([hostname]) => hostname === selected)) select.value = selected;
+      else if (entries.length) select.selectedIndex = 0;
+      if (select.options.length !== previousCount || selected !== select.value) loadHistory();
+    }
+
+    function renderChart(points) {
+      const svg = document.getElementById("history-chart");
+      svg.replaceChildren();
+      const left = 42, right = 788, top = 18, bottom = 232;
+      for (let value = 0; value <= 100; value += 25) {
+        const y = bottom - (bottom - top) * value / 100;
+        svg.appendChild(svgElement("line", { x1: left, y1: y, x2: right, y2: y, class: "chart-grid" }));
+        const label = svgElement("text", { x: left - 8, y: y + 4, class: "chart-axis", "text-anchor": "end" });
+        label.textContent = `${value}%`;
+        svg.appendChild(label);
+      }
+      if (!points.length) return;
+      const minTime = points[0].timestamp;
+      const maxTime = points[points.length - 1].timestamp;
+      const x = index => points.length === 1
+        ? (left + right) / 2
+        : left + (right - left) * index / (points.length - 1);
+      for (const [key, cssClass] of [
+        ["cpu_percent", "cpu"], ["mem_percent", "memory"], ["disk_percent", "disk"],
+      ]) {
+        const path = points.map((point, index) => {
+          const value = point[key];
+          const px = x(index);
+          const py = bottom - (bottom - top) * value / 100;
+          return `${index ? "L" : "M"}${px.toFixed(1)},${py.toFixed(1)}`;
+        }).join(" ");
+        const line = svgElement("path", { d: path, class: `chart-line ${cssClass}` });
+        const title = svgElement("title", {});
+        title.textContent = `${key.replace("_percent", "")} utilization`;
+        line.appendChild(title);
+        svg.appendChild(line);
+      }
+      const formatter = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric" });
+      for (const [position, timestamp, anchor] of [
+        [left, minTime, "start"], [right, maxTime, "end"],
+      ]) {
+        const label = svgElement("text", {
+          x: position, y: 257, class: "chart-axis", "text-anchor": anchor,
+        });
+        label.textContent = formatter.format(new Date(timestamp * 1000));
+        svg.appendChild(label);
+      }
+    }
+
+    async function loadHistory() {
+      const hostname = document.getElementById("history-node").value;
+      const hours = document.getElementById("history-range").value;
+      const message = document.getElementById("history-status");
+      const requestId = ++historyRequest;
+      if (!hostname) {
+        renderChart([]);
+        message.textContent = "Select a node to load its history.";
+        return;
+      }
+      message.textContent = "Loading SQLite history…";
+      try {
+        const params = new URLSearchParams({ hostname, hours });
+        const response = await fetch(`/history?${params}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Server returned ${response.status}`);
+        const result = await response.json();
+        if (requestId !== historyRequest) return;
+        renderChart(result.points);
+        message.textContent = result.points.length
+          ? `${result.points.length} time buckets from the last ${hours === "1" ? "hour" : hours === "24" ? "24 hours" : "7 days"}`
+          : "No telemetry history for this node in the selected time range.";
+      } catch (error) {
+        if (requestId !== historyRequest) return;
+        renderChart([]);
+        message.textContent = `Could not load history: ${error.message}`;
+      }
+    }
+
+    function showView(name) {
+      const labels = { overview: "Overview", nodes: "Nodes", history: "History" };
+      const breadcrumb = document.getElementById("breadcrumb");
+      const colony = element("b", "", "Home colony");
+      breadcrumb.replaceChildren(
+        document.createTextNode("Workspace / "),
+        colony,
+        document.createTextNode(` / ${labels[name]}`),
+      );
+      document.querySelectorAll(".tab").forEach(tab => {
+        const selected = tab.dataset.view === name;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+      });
+      document.querySelectorAll(".view").forEach(view => {
+        view.hidden = view.id !== `view-${name}`;
+      });
+      if (name === "history") loadHistory();
+    }
+
+    async function refresh() {
+      try {
+        const [dataResponse, topologyResponse] = await Promise.all([
+          fetch("/data", { cache: "no-store" }),
+          fetch("/topology", { cache: "no-store" }),
+        ]);
+        if (!dataResponse.ok) throw new Error(`Server returned ${dataResponse.status}`);
+        if (!topologyResponse.ok) throw new Error(`Topology returned ${topologyResponse.status}`);
+        nodeData = await dataResponse.json();
+        topologyData = await topologyResponse.json();
+        const entries = Object.entries(nodeData);
+        renderSummary(entries);
+        renderTopology(topologyData);
+        renderNodes();
+        status.textContent = `Colony synced at ${new Date().toLocaleTimeString()}`;
+        status.dataset.state = "connected";
+      } catch (error) {
+        status.textContent = `Colony connection failed: ${error.message}`;
+        status.dataset.state = "error";
+      }
+    }
+
+    document.querySelectorAll(".tab").forEach(tab =>
+      tab.addEventListener("click", () => showView(tab.dataset.view)));
+    document.getElementById("node-search").addEventListener("input", renderNodes);
+    document.getElementById("status-filter").addEventListener("change", renderNodes);
+    document.getElementById("history-node").addEventListener("change", loadHistory);
+    document.getElementById("history-range").addEventListener("change", loadHistory);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && !wakeLock) requestWakeLock();
+    });
+
+    async function requestWakeLock() {
+      if (document.visibilityState !== "visible") return;
+      if (!("wakeLock" in navigator)) {
+        wakeStatus.textContent = "Screen wake lock requires a supported browser and secure connection";
+        return;
+      }
+      try {
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeStatus.textContent = "Colony monitor stays awake";
+        wakeLock.addEventListener("release", () => { wakeLock = null; });
+      } catch (error) {
+        wakeStatus.textContent = `Screen wake lock unavailable: ${error.message}`;
+      }
+    }
+
+    showView("overview");
+    refresh();
+    requestWakeLock();
+    window.setInterval(refresh, 3000);
+  </script>
+  </main>
+  </div>
+</body>
+</html>

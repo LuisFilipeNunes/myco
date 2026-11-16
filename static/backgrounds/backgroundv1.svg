@@ -1,0 +1,193 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0b1014"/>
+      <stop offset="100%" stop-color="#0d1418"/>
+    </linearGradient>
+
+    <linearGradient id="ambient1" x1="220" y1="120" x2="620" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#172229" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#131c21" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="ambient2" x1="1080" y1="560" x2="1520" y2="880" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#172229" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#131c21" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="branch" x1="140" y1="130" x2="1440" y2="790" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#e8f2f1" stop-opacity="0.08"/>
+      <stop offset="50%" stop-color="#66e3b4" stop-opacity="0.34"/>
+      <stop offset="100%" stop-color="#e8f2f1" stop-opacity="0.10"/>
+    </linearGradient>
+
+    <linearGradient id="branchSoft" x1="140" y1="130" x2="1440" y2="790" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#e8f2f1" stop-opacity="0.04"/>
+      <stop offset="50%" stop-color="#66e3b4" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#e8f2f1" stop-opacity="0.05"/>
+    </linearGradient>
+
+    <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#66e3b4" stop-opacity="0.85"/>
+      <stop offset="65%" stop-color="#66e3b4" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#66e3b4" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <mask id="softFade">
+      <rect width="1600" height="900" fill="white"/>
+      <rect width="1600" height="900" fill="url(#maskGrad)"/>
+    </mask>
+
+    <radialGradient id="maskGrad" cx="50%" cy="50%" r="72%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.95"/>
+      <stop offset="68%" stop-color="white" stop-opacity="0.88"/>
+      <stop offset="100%" stop-color="black" stop-opacity="0.20"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+
+  <!-- soft panel-like atmosphere -->
+  <circle cx="300" cy="180" r="240" fill="url(#ambient1)"/>
+  <circle cx="1320" cy="720" r="280" fill="url(#ambient2)"/>
+  <rect x="380" y="170" width="820" height="500" rx="36" fill="#131c21" opacity="0.06"/>
+
+  <g mask="url(#softFade)">
+    <!-- back layer -->
+    <g stroke="url(#branchSoft)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.45" filter="url(#softGlow)">
+      <path d="M118 728C203 681 271 641 351 596C426 554 482 526 550 505C616 484 676 475 740 447C816 414 871 355 957 336C1046 316 1143 342 1231 317C1327 289 1395 233 1490 183"/>
+      <path d="M166 278C258 301 351 342 416 383C492 431 547 484 628 506C707 527 786 515 864 551C943 588 1004 665 1104 683C1209 702 1321 676 1413 721"/>
+      <path d="M435 118C484 172 523 226 535 298C546 364 527 424 553 479C578 532 641 571 662 632C685 697 677 754 699 815"/>
+      <path d="M776 135C786 202 810 259 793 319C776 379 726 432 724 494C722 557 768 614 770 676C771 733 755 779 738 828"/>
+      <path d="M1067 148C1042 205 1014 254 1016 311C1018 374 1065 423 1056 490C1046 562 988 613 984 683C981 733 1000 779 1026 823"/>
+      <path d="M262 795C337 727 402 679 467 634C539 584 607 568 682 578C760 589 830 635 910 630C1004 624 1076 549 1160 515C1265 472 1379 486 1493 553"/>
+    </g>
+
+    <!-- primary layer -->
+    <g stroke="url(#branch)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" opacity="0.82">
+      <path d="M118 728C203 681 271 641 351 596C426 554 482 526 550 505C616 484 676 475 740 447C816 414 871 355 957 336C1046 316 1143 342 1231 317C1327 289 1395 233 1490 183"/>
+      <path d="M166 278C258 301 351 342 416 383C492 431 547 484 628 506C707 527 786 515 864 551C943 588 1004 665 1104 683C1209 702 1321 676 1413 721"/>
+      <path d="M435 118C484 172 523 226 535 298C546 364 527 424 553 479C578 532 641 571 662 632C685 697 677 754 699 815"/>
+      <path d="M776 135C786 202 810 259 793 319C776 379 726 432 724 494C722 557 768 614 770 676C771 733 755 779 738 828"/>
+      <path d="M1067 148C1042 205 1014 254 1016 311C1018 374 1065 423 1056 490C1046 562 988 613 984 683C981 733 1000 779 1026 823"/>
+      <path d="M262 795C337 727 402 679 467 634C539 584 607 568 682 578C760 589 830 635 910 630C1004 624 1076 549 1160 515C1265 472 1379 486 1493 553"/>
+
+      <path d="M550 505C511 473 476 449 441 421"/>
+      <path d="M550 505C595 470 625 442 663 411"/>
+      <path d="M740 447C717 500 691 540 651 583"/>
+      <path d="M957 336C988 299 1022 277 1065 256"/>
+      <path d="M1231 317C1198 278 1158 255 1114 240"/>
+      <path d="M416 383C378 359 337 339 290 322"/>
+      <path d="M628 506C675 499 714 497 762 507"/>
+      <path d="M864 551C905 585 940 614 966 652"/>
+      <path d="M1104 683C1142 654 1181 634 1234 623"/>
+      <path d="M1413 721C1444 746 1467 776 1490 816"/>
+      <path d="M535 298C492 312 459 331 430 361"/>
+      <path d="M553 479C602 469 640 462 681 474"/>
+      <path d="M662 632C626 664 602 692 584 735"/>
+      <path d="M793 319C758 299 724 274 691 236"/>
+      <path d="M724 494C681 513 650 537 619 575"/>
+      <path d="M1016 311C1053 327 1086 351 1117 386"/>
+      <path d="M1056 490C1018 510 982 540 952 580"/>
+      <path d="M467 634C436 663 410 692 389 735"/>
+      <path d="M682 578C719 606 743 636 757 678"/>
+      <path d="M910 630C875 660 844 685 803 707"/>
+      <path d="M1160 515C1208 522 1248 537 1287 567"/>
+    </g>
+
+    <!-- nodes -->
+    <g>
+      <g filter="url(#softGlow)" opacity="0.55">
+        <circle cx="118" cy="728" r="18" fill="url(#nodeGlow)"/>
+        <circle cx="351" cy="596" r="12" fill="url(#nodeGlow)"/>
+        <circle cx="550" cy="505" r="14" fill="url(#nodeGlow)"/>
+        <circle cx="740" cy="447" r="12" fill="url(#nodeGlow)"/>
+        <circle cx="957" cy="336" r="14" fill="url(#nodeGlow)"/>
+        <circle cx="1231" cy="317" r="12" fill="url(#nodeGlow)"/>
+        <circle cx="1490" cy="183" r="18" fill="url(#nodeGlow)"/>
+
+        <circle cx="166" cy="278" r="14" fill="url(#nodeGlow)"/>
+        <circle cx="416" cy="383" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="628" cy="506" r="12" fill="url(#nodeGlow)"/>
+        <circle cx="864" cy="551" r="12" fill="url(#nodeGlow)"/>
+        <circle cx="1104" cy="683" r="12" fill="url(#nodeGlow)"/>
+        <circle cx="1413" cy="721" r="16" fill="url(#nodeGlow)"/>
+
+        <circle cx="435" cy="118" r="12" fill="url(#nodeGlow)"/>
+        <circle cx="535" cy="298" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="553" cy="479" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="662" cy="632" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="699" cy="815" r="12" fill="url(#nodeGlow)"/>
+
+        <circle cx="776" cy="135" r="12" fill="url(#nodeGlow)"/>
+        <circle cx="793" cy="319" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="724" cy="494" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="770" cy="676" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="738" cy="828" r="12" fill="url(#nodeGlow)"/>
+
+        <circle cx="1067" cy="148" r="12" fill="url(#nodeGlow)"/>
+        <circle cx="1016" cy="311" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="1056" cy="490" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="984" cy="683" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="1026" cy="823" r="12" fill="url(#nodeGlow)"/>
+
+        <circle cx="262" cy="795" r="14" fill="url(#nodeGlow)"/>
+        <circle cx="467" cy="634" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="682" cy="578" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="910" cy="630" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="1160" cy="515" r="10" fill="url(#nodeGlow)"/>
+        <circle cx="1493" cy="553" r="14" fill="url(#nodeGlow)"/>
+      </g>
+
+      <g>
+        <circle cx="118" cy="728" r="4.4" fill="#66e3b4"/>
+        <circle cx="351" cy="596" r="2.6" fill="#66e3b4"/>
+        <circle cx="550" cy="505" r="3.2" fill="#66e3b4"/>
+        <circle cx="740" cy="447" r="2.8" fill="#e8f2f1" opacity="0.88"/>
+        <circle cx="957" cy="336" r="3.2" fill="#66e3b4"/>
+        <circle cx="1231" cy="317" r="2.6" fill="#e8f2f1" opacity="0.82"/>
+        <circle cx="1490" cy="183" r="4.4" fill="#66e3b4"/>
+
+        <circle cx="166" cy="278" r="3.3" fill="#66e3b4"/>
+        <circle cx="416" cy="383" r="2.3" fill="#e8f2f1" opacity="0.84"/>
+        <circle cx="628" cy="506" r="2.7" fill="#66e3b4"/>
+        <circle cx="864" cy="551" r="2.7" fill="#e8f2f1" opacity="0.84"/>
+        <circle cx="1104" cy="683" r="2.7" fill="#66e3b4"/>
+        <circle cx="1413" cy="721" r="3.6" fill="#66e3b4"/>
+
+        <circle cx="435" cy="118" r="2.8" fill="#e8f2f1" opacity="0.84"/>
+        <circle cx="535" cy="298" r="2.2" fill="#66e3b4"/>
+        <circle cx="553" cy="479" r="2.2" fill="#e8f2f1" opacity="0.82"/>
+        <circle cx="662" cy="632" r="2.2" fill="#66e3b4"/>
+        <circle cx="699" cy="815" r="2.8" fill="#66e3b4"/>
+
+        <circle cx="776" cy="135" r="2.8" fill="#66e3b4"/>
+        <circle cx="793" cy="319" r="2.2" fill="#e8f2f1" opacity="0.84"/>
+        <circle cx="724" cy="494" r="2.2" fill="#66e3b4"/>
+        <circle cx="770" cy="676" r="2.2" fill="#e8f2f1" opacity="0.82"/>
+        <circle cx="738" cy="828" r="2.8" fill="#66e3b4"/>
+
+        <circle cx="1067" cy="148" r="2.8" fill="#66e3b4"/>
+        <circle cx="1016" cy="311" r="2.2" fill="#e8f2f1" opacity="0.82"/>
+        <circle cx="1056" cy="490" r="2.2" fill="#66e3b4"/>
+        <circle cx="984" cy="683" r="2.2" fill="#e8f2f1" opacity="0.82"/>
+        <circle cx="1026" cy="823" r="2.8" fill="#66e3b4"/>
+
+        <circle cx="262" cy="795" r="3.2" fill="#66e3b4"/>
+        <circle cx="467" cy="634" r="2.2" fill="#e8f2f1" opacity="0.84"/>
+        <circle cx="682" cy="578" r="2.2" fill="#66e3b4"/>
+        <circle cx="910" cy="630" r="2.2" fill="#e8f2f1" opacity="0.82"/>
+        <circle cx="1160" cy="515" r="2.2" fill="#66e3b4"/>
+        <circle cx="1493" cy="553" r="3.2" fill="#66e3b4"/>
+      </g>
+    </g>
+  </g>
+</svg>

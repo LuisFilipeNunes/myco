@@ -1,0 +1,29 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Runtime data and local configuration
+*.db
+*.db-shm
+*.db-wal
+.env
+esp32/include/config.h
+
+# Build output
+windows-sensors/bin/
+windows-sensors/obj/
+windows-sensors/publish/
+esp32/.pio/
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local tests used in development 
+tests/*
+scripts/*
