@@ -109,13 +109,6 @@
     #tab-history::before { content: "≋"; }
     .tab[aria-selected="true"] { background: var(--tab-active-background); color: var(--tab-active-text); }
     .tab[aria-selected="true"]::before { color: var(--green); }
-    .sidefoot {
-      margin-top: auto;
-      padding: 1rem .7rem;
-      border-top: 1px solid var(--border);
-      color: var(--muted);
-      font-size: .75rem;
-    }
     .connection {
       display: flex;
       align-items: center;
@@ -306,7 +299,6 @@
     .legend-dot.memory { background: var(--green); }
     .legend-dot.disk { background: var(--coral); }
     #history-status { min-height: 1.2em; margin: .35rem 0 0; color: var(--muted); font-size: .75rem; }
-    .wake-status { margin-top: 1rem; color: var(--muted); font-size: .72rem; text-align: center; }
     @media (prefers-color-scheme: light) {
       :root {
         color-scheme: light;
@@ -364,7 +356,6 @@
       .tabs { display: flex; flex: 1; justify-content: flex-end; gap: .2rem; }
       .tab { justify-content: center; padding: .55rem .65rem; font-size: .78rem; }
       .tab::before { display: none; }
-      .sidefoot { display: none; }
       main { padding: 1.4rem 1.1rem 3rem; }
     }
     @media (max-width: 480px) {
@@ -393,10 +384,7 @@
     <aside class="sidebar">
       <div class="sidebar-top">
         <div class="brand">
-          <picture>
-            <source media="(prefers-color-scheme: light)" srcset="/static/images/logo_black.png">
-            <img src="/static/images/logo_clear.png" alt="Myco logo">
-          </picture>
+          <img src="/static/images/myco-logo.png" alt="Myco logo">
           <div>
             <p class="brand-name">MYCO</p>
             <p class="brand-caption">NETWORK INTELLIGENCE</p>
@@ -410,9 +398,6 @@
             <button class="tab" id="tab-history" type="button" role="tab" aria-selected="false" aria-controls="view-history" data-view="history">History</button>
           </nav>
         </div>
-      </div>
-      <div class="sidefoot">
-        <p>Colony telemetry updates every few seconds.</p>
       </div>
     </aside>
 
@@ -504,11 +489,9 @@
         <p id="history-status" role="status">Select a node to load its history.</p>
       </section>
     </section>
-    <p class="wake-status" id="wake-status"></p>
   </main>
   <script>
     const status = document.getElementById("status");
-    const wakeStatus = document.getElementById("wake-status");
     const numberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
     const capacityFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
     const missingMetric = "The agent hasn't reported this metric.";
@@ -939,17 +922,11 @@
 
     async function requestWakeLock() {
       if (document.visibilityState !== "visible") return;
-      if (!("wakeLock" in navigator)) {
-        wakeStatus.textContent = "Screen wake lock requires a supported browser and secure connection";
-        return;
-      }
+      if (!("wakeLock" in navigator)) return;
       try {
         wakeLock = await navigator.wakeLock.request("screen");
-        wakeStatus.textContent = "Colony monitor stays awake";
         wakeLock.addEventListener("release", () => { wakeLock = null; });
-      } catch (error) {
-        wakeStatus.textContent = `Screen wake lock unavailable: ${error.message}`;
-      }
+      } catch (error) {}
     }
 
     showView("overview");
