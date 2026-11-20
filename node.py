@@ -1,5 +1,5 @@
 """Collect and exchange telemetry with other nodes."""
-
+# FIXME this should be separated unto other files too.
 import argparse
 import datetime
 import json
@@ -558,7 +558,10 @@ def run(state, hostname, device_type, disk_path, interval, timeout, stop_event):
             LOGGER.exception("Could not collect or persist local telemetry")
         try:
             gossip_once(state, timeout)
-        except (OSError, error.URLError, ValueError):
+        except (OSError, error.URLError) as exc:
+            reason = exc.reason if isinstance(exc, error.URLError) else exc
+            LOGGER.warning("Gossip peer unavailable (%s); will retry", reason)
+        except ValueError:
             LOGGER.exception("Could not exchange gossip")
         if stop_event.wait(max(0, interval - (time.monotonic() - started))):
             break
